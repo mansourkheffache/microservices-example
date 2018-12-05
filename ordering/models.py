@@ -1,6 +1,10 @@
 from pymongo.write_concern import WriteConcern
 from bson import ObjectId
-from pymodm import MongoModel, fields
+from pymodm import MongoModel, fields, connect
+
+# # Connect to MongoDB and call the connection "my-app".
+connect("mongodb://db/dev")
+
 
 class Order(MongoModel):
 	_id 			= fields.ObjectIdField(primary_key=True, default=ObjectId)

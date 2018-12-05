@@ -2,7 +2,6 @@ from ordering import api
 from flask_restful import Resource, reqparse
 from ordering.models import Order
 from ordering.helper import CustomJSONEncoder, pretty
-from pymodm.connection import connect
 from bson import json_util, ObjectId
 from flask import jsonify
 import datetime
@@ -11,8 +10,6 @@ import sys
 import requests
 
 
-# # Connect to MongoDB and call the connection "my-app".
-connect("mongodb://localhost:27017/dev")
 
 parser = reqparse.RequestParser()
 parser.add_argument('address')
@@ -44,17 +41,20 @@ class OrderList(Resource):
 		args 	= parser.parse_args()
 		name 	= args['name']
 		items_id= args['items']
-		bill 	= args['bill']
 		destination = args['address']
 		creation_date = datetime.datetime.now()
 
+		bill = 0
+
 		# Update items availability in inventory
 		for item_id in items_id:
-			resp_get_item = requests.get("http://localhost:5001/items/"+ item_id)
+			resp_get_item = requests.get("http://inventory:5000/items/"+ item_id)
 			data = resp_get_item.json()
 			curr_availability = data['availability']
-			resp_update_item = requests.put("http://localhost:5001/items/"+\
-			 item_id, json={'availability': curr_availability - 1})
+			resp_update_item = requests.put("http://inventory:5000/items/"+\
+			item_id, json={'availability': curr_availability - 1})
+
+			bill += data['price']
 
 		# TODO: add id and delivery at saving Order
 
@@ -62,7 +62,7 @@ class OrderList(Resource):
 			creation_date=creation_date, destination=destination)
 		order.save()
 
-		resp_create_delivery = requests.post("http://localhost:5003/tracking", \
+		resp_create_delivery = requests.post("http://tracking:5000/tracking", \
 			json={'destination': destination, 'order_id': str(order._id)})
 		print(resp_create_delivery.text, '\n\n')
 		order.delivery_id = resp_create_delivery.json()['_id']

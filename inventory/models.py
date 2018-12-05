@@ -3,7 +3,7 @@ from datetime import datetime
 from bson import ObjectId
 
 
-connect('mongodb://localhost:27017/dev')
+connect('mongodb://db/dev')
 
 
 class Item(MongoModel):
