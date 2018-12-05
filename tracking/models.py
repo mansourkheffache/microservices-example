@@ -1,15 +1,16 @@
 from pymodm import MongoModel, fields, connect
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
 
 
 connect('mongodb://localhost:27017/dev')
 
 
-class Item(MongoModel):
-	_id = fields.ObjectIdField(primary_key=True, default=ObjectId)
-	name = fields.CharField(required=True)
-	category = fields.CharField(required=True)
-	price = fields.FloatField(required=True)
-	availability = fields.IntegerField(default=0)
-	updated_on = fields.DateTimeField(required=True)
+class Delivery(MongoModel):
+	_id 			= fields.ObjectIdField(primary_key=True, default=ObjectId)
+	creation_date 	= fields.DateTimeField(default=datetime.now)
+	delivery_date 	= fields.DateTimeField(default=lambda: datetime.now() + timedelta(days=7))
+	status			= fields.CharField(default='processing')
+	current_location= fields.CharField(default='Depot')
+	destination		= fields.CharField(required=True)
+	order_id		= fields.CharField(required=True)

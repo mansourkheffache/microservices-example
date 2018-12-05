@@ -7,8 +7,6 @@ api = Api(app)
 
 app.secret_key = 'SOSECRET!!!'
 
-
-
 app.json_encoder = CustomJSONEncoder
 
 
