@@ -10,12 +10,3 @@ class Order(MongoModel):
 	creation_date 	= fields.DateTimeField()
 	destination		= fields.CharField()
 	delivery_id 	= fields.CharField()
-
-class Delivery(MongoModel):
-	_id 			= fields.ObjectIdField(primary_key=True, default=ObjectId)
-	creation_date 	= fields.DateTimeField()
-	delivery_date 	= fields.DateTimeField()
-	status			= fields.CharField()
-	current_location= fields.CharField()
-	destination		= fields.CharField()
-	order_id		= fields.CharField()
