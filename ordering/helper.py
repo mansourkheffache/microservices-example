@@ -8,7 +8,6 @@ class CustomJSONEncoder(JSONEncoder):
 	def default(self, obj):
 		try:
 			if isinstance(obj, ObjectId):
-				print(str(obj), '\n\n')
 				return str(obj)
 			elif isinstance(obj, datetime):
 				return round(obj.timestamp())

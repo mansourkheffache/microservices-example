@@ -1,13 +1,14 @@
-from inventory import api
+from ordering import api
 from flask_restful import Resource, reqparse
-from inventory.models import Order, Delivery
-from inventory.helper import CustomJSONEncoder, pretty
+from ordering.models import Order
+from ordering.helper import CustomJSONEncoder, pretty
 from pymodm.connection import connect
 from bson import json_util, ObjectId
 from flask import jsonify
 import datetime
 import json
 import sys
+import requests
 
 
 # # Connect to MongoDB and call the connection "my-app".
@@ -27,35 +28,53 @@ class OrderEntity(Resource):
 		order.to_son()
 		return jsonify(pretty(order))
 
-	# Delete order by ID
-
+	# Delete order
+	def delete(self, order_id):
+		order = Order.objects.get({'_id': ObjectId(order_id)})
+		order.delete()
+		resp = jsonify(success=True)
+		return resp
 
 api.add_resource(OrderEntity, '/orders/<order_id>')
 
 class OrderList(Resource):
+
 	# Create a new order
 	def post(self):
 		args 	= parser.parse_args()
 		name 	= args['name']
-		items 	= args['items']
+		items_id= args['items']
 		bill 	= args['bill']
 		destination = args['address']
 		creation_date = datetime.datetime.now()
 
+		# Update items availability in inventory
+		for item_id in items_id:
+			resp_get_item = requests.get("http://localhost:5001/items/"+ item_id)
+			data = resp_get_item.json()
+			curr_availability = data['availability']
+			resp_update_item = requests.put("http://localhost:5001/items/"+\
+			 item_id, json={'availability': curr_availability - 1})
+
 		# TODO: add id and delivery at saving Order
 
-		order = Order( name=name, bill=bill, items=items, creation_date=creation_date, destination=destination)
+		order = Order( name=name, bill=bill, items=items_id, \
+			creation_date=creation_date, destination=destination)
+		order.save()
+
+		resp_create_delivery = requests.post("http://localhost:5003/tracking", \
+			json={'destination': destination, 'order_id': str(order._id)})
+		print(resp_create_delivery.text, '\n\n')
+		order.delivery_id = resp_create_delivery.json()['_id']
 		order.save()
 		return jsonify(pretty(order))
 
 	# Get list of orders
 	# Filter by user name (optional)
 	def get(self):
-		args = parser.parse_args()
 		orders = Order.objects.all()
-		name = None
 		try:
-			print('\n\n\nIn name filter')
+			args = parser.parse_args()
 			name = args['name']
 			orders = Order.objects.get_queryset().raw({'name': name})
 			return jsonify(pretty(orders))
@@ -65,11 +84,3 @@ class OrderList(Resource):
 		return jsonify(pretty(orders))
 
 api.add_resource(OrderList, '/orders')
-
-# class OrderListOneUser(Resource):
-# 	# Get list of orders for a single user
-# 	def get(self, name):
-# 		args = parser.parse_args()
-# 		# orders = Order.objects.all()
-# 		orders = Order.objects.get( {'name' : name })
-# 		return jsonify(pretty(orders))
