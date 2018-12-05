@@ -1,6 +1,19 @@
 version: "3"
 services:
 
+
+  front:
+    build: ./front/
+    depends_on:
+      - db
+      - inventory
+      - tracking
+      - ordering
+    expose:
+      - "5000"
+    ports:
+      - "0.0.0.0:5000:5000"
+
   inventory:
     build: ./inventory/
     depends_on:

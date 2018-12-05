@@ -1,12 +1,12 @@
 FROM python:3.7-stretch
 
-WORKDIR /home/inventory
+WORKDIR /home/
 
 RUN pip3 install flask flask-restful pymodm requests
 
-COPY inventory ./inventory
+COPY * ./front/
 
-ENV FLASK_APP inventory
+ENV FLASK_APP front
 
 EXPOSE 5000
 
